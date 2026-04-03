@@ -4,8 +4,8 @@ import pandas as pd
 import plotly.graph_objects as go
 
 st.set_page_config(page_title="VCPMI-360 Silver LIVE", layout="wide")
-st.title("🪙 VCPMI-360 Silver Dashboard - LIVE")
-st.caption("Actual MCX + Live COMEX + Dynamic VC PMI / Gann / Fib")
+st.title("VCPMI-360 Silver Dashboard - LIVE")
+st.caption("Actual MCX Price + Live COMEX + Dynamic VC PMI")
 
 @st.cache_data(ttl=60)
 def get_live_data():
@@ -25,13 +25,8 @@ vc_pmi = {
     "weekly_sell2": 82.19, "monthly_mean": 77.81, "monthly_sell1": 94.41
 }
 
-mcx_actual = st.number_input("🎯 ACTUAL MCX SILVER PRICE (paste from Groww/Zerodha/Moneycontrol)", 
+mcx_actual = st.number_input("ACTUAL MCX SILVER PRICE (paste from Groww/Zerodha/Moneycontrol)", 
                              value=232495, step=100)
 
 parity = round(comex * 32.1507 * usdinr, 0)
-scaling = mcx_actual / parity if parity > 0 else 1.0
-
-st.metric("Your Actual MCX Price", f"₹{mcx_actual:,}")
-st.metric("Live COMEX Silver", f"${comex:.2f} | Parity ≈ ₹{parity:,}")
-
-signal = "🟢 STRONG BUY" if mcx_actual < 225500
+scaling = mcx_actual / parity if parity >
