@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="Dark Data Predictions", layout="wide")
 st.title("🪙 Dark Data Predictions")
-st.caption("Live MCX • COMEX • Gold • Oil • USD/INR • Full Ensemble Average (VC PMI + All Experts)")
+st.caption("Live MCX • COMEX • Gold • Oil • USD/INR • Full Ensemble Average (All Experts Blended)")
 
 # Live data
 @st.cache_data(ttl=60)
@@ -26,20 +26,23 @@ parity = round(comex * 32.1507 * usdinr, 0)
 scaling = mcx_actual / parity if parity > 0 else 1.0
 gsr = round(gold / comex, 1)
 
-# VC PMI levels (from your reports)
-vc_pmi = {
-    "daily_mean": 75.45, "daily_buy1": 74.63, "daily_buy2": 73.18,
-    "daily_sell1": 76.87, "daily_sell2": 77.72,
-    "weekly_sell2": 82.19, "monthly_mean": 77.81, "monthly_sell1": 90.0
-}
-
-# Ensemble blended targets (VC PMI averaged with all experts/models)
-ensemble_comex = {
-    "Monday Close": 75.90,
-    "First Target": 80.75,
-    "Core Target (mid-April)": 82.00,
-    "Stretch Target (May)": 88.00
-}
+# ====================== DYNAMIC ENSEMBLE SCORE ======================
+if mcx_actual < 225500:
+    ensemble_score = 92
+    signal_text = "STRONG BUY (Deep Dip)"
+    color = "success"
+elif mcx_actual < 230000:
+    ensemble_score = 78
+    signal_text = "BUY on Pullback"
+    color = "warning"
+elif mcx_actual < 235000:
+    ensemble_score = 65
+    signal_text = "NEUTRAL - Watch"
+    color = "warning"
+else:
+    ensemble_score = 42
+    signal_text = "WAIT / High Risk"
+    color = "error"
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "Ensemble Targets", "Formulae & History", "Sensitivities", "Live Chart"])
 
@@ -51,31 +54,45 @@ with tab1:
     with col4: st.metric("Crude Oil", f"${oil:.2f}")
     st.write(f"**GSR**: {gsr}:1 | **USD/INR**: {usdinr:.2f}")
 
-    signal = "STRONG BUY" if mcx_actual < 225500 else "BUY on pullback" if mcx_actual < 230000 else "NEUTRAL"
-    st.success(f"**{signal}** | Ensemble Score: 82/100")
+    st.subheader("LIVE ENSEMBLE SIGNAL")
+    if color == "success":
+        st.success(f"**{signal_text}** | Ensemble Score: **{ensemble_score}/100**")
+    elif color == "warning":
+        st.warning(f"**{signal_text}** | Ensemble Score: **{ensemble_score}/100**")
+    else:
+        st.error(f"**{signal_text}** | Ensemble Score: **{ensemble_score}/100**")
 
 with tab2:
-    st.subheader("VC PMI Scaled Targets (from your reports)")
-    for name, level in vc_pmi.items():
-        scaled = round(level * scaling * 32.1507 * usdinr, 0)
-        st.write(f"{name.replace('_', ' ').title()} → MCX **₹{scaled:,}**")
-
-    st.subheader("Ensemble Averaged Targets (VC PMI + All Experts Blended)")
-    st.caption("Patrick VC PMI averaged with JPMorgan, Silver Institute, XGBoost/LSTM/ARIMA, historical analogs, deficit math & ratios")
-    for name, level in ensemble_comex.items():
+    st.subheader("Ensemble Averaged Targets (All Experts Blended)")
+    st.caption("VC PMI + JPMorgan + Silver Institute + XGBoost/LSTM/ARIMA + Historical Analogs + Deficit Math")
+    
+    for name, level in {
+        "Monday Close": 75.90,
+        "First Target": 80.75,
+        "Core Target (mid-April)": 82.00,
+        "Stretch Target (May)": 88.00
+    }.items():
         scaled_mcx = round(level * scaling * 32.1507 * usdinr, 0)
         st.write(f"**{name}** → COMEX **${level}** | MCX **₹{scaled_mcx:,}**")
 
-    st.write("**🟢 BUY RANGES** | Optimal Dip-Buy: ₹{0:,} – ₹{1:,}".format(
-        round(70.80 * scaling * 32.1507 * usdinr, 0),
-        round(72.20 * scaling * 32.1507 * usdinr, 0)))
-    st.write("**🔴 SELL RANGES** | First Sell: ₹{0:,} – ₹{1:,} | Core Sell: ₹{2:,} – ₹{3:,}".format(
-        round(76.50 * scaling * 32.1507 * usdinr, 0),
-        round(77.50 * scaling * 32.1507 * usdinr, 0),
-        round(80.50 * scaling * 32.1507 * usdinr, 0),
-        round(85.00 * scaling * 32.1507 * usdinr, 0)))
-    st.error(f"**Stop Loss** → Below ₹{round(68.20 * scaling * 32.1507 * usdinr, 0):,}")
-    st.error(f"**Hard Stop** → Below ₹{round(67.80 * scaling * 32.1507 * usdinr, 0):,}")
+    st.write("**🟢 BUY RANGES**")
+    buy_low = round(70.80 * scaling * 32.1507 * usdinr, 0)
+    buy_high = round(72.20 * scaling * 32.1507 * usdinr, 0)
+    st.write(f"Optimal Dip-Buy Zone → MCX **₹{buy_low:,} – ₹{buy_high:,}**")
+
+    st.write("**🔴 SELL RANGES**")
+    sell1_low = round(76.50 * scaling * 32.1507 * usdinr, 0)
+    sell1_high = round(77.50 * scaling * 32.1507 * usdinr, 0)
+    sell2_low = round(80.50 * scaling * 32.1507 * usdinr, 0)
+    sell2_high = round(82.00 * scaling * 32.1507 * usdinr, 0)
+    st.write(f"First Sell Target → MCX **₹{sell1_low:,} – ₹{sell1_high:,}**")
+    st.write(f"Core Sell Target → MCX **₹{sell2_low:,} – ₹{sell2_high:,}**")
+
+    st.write("**🛑 STOP LOSS & HARD STOP**")
+    stop_loss = round(68.20 * scaling * 32.1507 * usdinr, 0)
+    hard_stop = round(67.80 * scaling * 32.1507 * usdinr, 0)
+    st.error(f"Stop Loss → Below MCX **₹{stop_loss:,}**")
+    st.error(f"Hard Stop (Structure Invalid) → Below MCX **₹{hard_stop:,}**")
 
 with tab3:
     st.subheader("Key Formulae & Historical Context")
