@@ -4,9 +4,8 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="Dark Data Predictions", layout="wide")
 st.title("🪙 Dark Data Predictions")
-st.caption("Live MCX • COMEX • Gold • Oil • USD/INR • Full Ensemble Average (All Experts Blended)")
+st.caption("Live MCX • COMEX • Gold • Oil • USD/INR • Full Ensemble Average")
 
-# Live data
 @st.cache_data(ttl=60)
 def get_live_data():
     try:
@@ -26,8 +25,8 @@ parity = round(comex * 32.1507 * usdinr, 0)
 scaling = mcx_actual / parity if parity > 0 else 1.0
 gsr = round(gold / comex, 1)
 
-# ====================== DYNAMIC ENSEMBLE SCORE ======================
-if mcx_actual < 225500:
+# Dynamic Ensemble Score
+if mcx_actual < 226000:
     ensemble_score = 92
     signal_text = "STRONG BUY (Deep Dip)"
     color = "success"
@@ -65,34 +64,37 @@ with tab1:
 with tab2:
     st.subheader("Ensemble Averaged Targets (All Experts Blended)")
     st.caption("VC PMI + JPMorgan + Silver Institute + XGBoost/LSTM/ARIMA + Historical Analogs + Deficit Math")
-    
-    for name, level in {
-        "Monday Close": 75.90,
-        "First Target": 80.75,
-        "Core Target (mid-April)": 82.00,
-        "Stretch Target (May)": 88.00
-    }.items():
+
+    for name, level in {"Monday Close": 75.90, "First Target": 80.75, "Core Target (mid-April)": 82.00, "Stretch Target (May)": 88.00}.items():
         scaled_mcx = round(level * scaling * 32.1507 * usdinr, 0)
         st.write(f"**{name}** → COMEX **${level}** | MCX **₹{scaled_mcx:,}**")
 
     st.write("**🟢 BUY RANGES**")
-    buy_low = round(70.80 * scaling * 32.1507 * usdinr, 0)
-    buy_high = round(72.20 * scaling * 32.1507 * usdinr, 0)
-    st.write(f"Optimal Dip-Buy Zone → MCX **₹{buy_low:,} – ₹{buy_high:,}**")
+    buy_low_comex = 70.0
+    buy_high_comex = 72.0
+    buy_low_mcx = round(buy_low_comex * scaling * 32.1507 * usdinr, 0)
+    buy_high_mcx = round(buy_high_comex * scaling * 32.1507 * usdinr, 0)
+    st.write(f"Optimal Dip-Buy → COMEX **${buy_low_comex} – ${buy_high_comex}** | MCX **₹{buy_low_mcx:,} – ₹{buy_high_mcx:,}**")
 
     st.write("**🔴 SELL RANGES**")
-    sell1_low = round(76.50 * scaling * 32.1507 * usdinr, 0)
-    sell1_high = round(77.50 * scaling * 32.1507 * usdinr, 0)
-    sell2_low = round(80.50 * scaling * 32.1507 * usdinr, 0)
-    sell2_high = round(82.00 * scaling * 32.1507 * usdinr, 0)
-    st.write(f"First Sell Target → MCX **₹{sell1_low:,} – ₹{sell1_high:,}**")
-    st.write(f"Core Sell Target → MCX **₹{sell2_low:,} – ₹{sell2_high:,}**")
+    sell1_low_comex = 76.50
+    sell1_high_comex = 77.50
+    sell1_low_mcx = round(sell1_low_comex * scaling * 32.1507 * usdinr, 0)
+    sell1_high_mcx = round(sell1_high_comex * scaling * 32.1507 * usdinr, 0)
+    sell2_low_comex = 80.50
+    sell2_high_comex = 86.00
+    sell2_low_mcx = round(sell2_low_comex * scaling * 32.1507 * usdinr, 0)
+    sell2_high_mcx = round(sell2_high_comex * scaling * 32.1507 * usdinr, 0)
+    st.write(f"First Sell Target → COMEX **${sell1_low_comex} – ${sell1_high_comex}** | MCX **₹{sell1_low_mcx:,} – ₹{sell1_high_mcx:,}**")
+    st.write(f"Core Sell Target → COMEX **${sell2_low_comex} – ${sell2_high_comex}** | MCX **₹{sell2_low_mcx:,} – ₹{sell2_high_mcx:,}**")
 
     st.write("**🛑 STOP LOSS & HARD STOP**")
-    stop_loss = round(68.20 * scaling * 32.1507 * usdinr, 0)
-    hard_stop = round(67.80 * scaling * 32.1507 * usdinr, 0)
-    st.error(f"Stop Loss → Below MCX **₹{stop_loss:,}**")
-    st.error(f"Hard Stop (Structure Invalid) → Below MCX **₹{hard_stop:,}**")
+    stop_loss_comex = 69.0
+    hard_stop_comex = 68.0
+    stop_loss_mcx = round(stop_loss_comex * scaling * 32.1507 * usdinr, 0)
+    hard_stop_mcx = round(hard_stop_comex * scaling * 32.1507 * usdinr, 0)
+    st.error(f"Stop Loss → COMEX **${stop_loss_comex}** | MCX **₹{stop_loss_mcx:,}**")
+    st.error(f"Hard Stop → COMEX **${hard_stop_comex}** | MCX **₹{hard_stop_mcx:,}**")
 
 with tab3:
     st.subheader("Key Formulae & Historical Context")
