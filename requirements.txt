@@ -1,4 +1,13 @@
 streamlit
 yfinance
 pandas
+numpy
 plotly
+scikit-learn
+xgboost
+statsmodels
+tensorflow
+scipy
+fastapi
+uvicorn
+redis
