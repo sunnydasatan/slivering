@@ -1,0 +1,1 @@
+uvicorn api.signal_api:app --reload
